@@ -38,6 +38,4 @@ Returns the spectral estimate, which is a four-dimensional array, of dim by dim 
 \description{
 Lag window estimate of spectral matrix in non-overlapping blocks.
 }
-\author{
-Xinyu Zhang xinyu-zhang@uiowa.edu
-}
+\keyword{internal}

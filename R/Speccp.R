@@ -36,7 +36,7 @@ NormalTrans <- function(x) {
 #' @param normaltrans (optional, default `TRUE`) Logical indicating whether a marginal nonparametric normal transformation will be implemented before estimation.
 #' @param coherency (optional, default `FALSE`)  Use it if users want to assess the coherency matrix, instead of spectral matrix. If `TRUE`, the spectral matrix will be normalized such that it has unit diagonal.
 #' @returns Returns the spectral estimate, which is a four-dimensional array, of dim by dim by freq (or band) by block
-#' @author Xinyu Zhang xinyu-zhang@uiowa.edu
+#' @keywords internal
 SpecBlock <- function(y,
                       L,
                       freq = seq(0, pi, length.out=19)[-1],
@@ -86,7 +86,7 @@ SpecBlock <- function(y,
 #' @param bs The block spectral, if not given, will be estimated from data using `SpecBlock`.
 #' @param cp The estimated cp location in block scale.
 #' @returns Returns the piecesewise block mean of spectral estimate, which is a four-dimensional array, of dim by dim by freq (or band) by number of stationary periods.
-#' @author Xinyu Zhang xinyu-zhang@uiowa.edu
+#' @keywords internal
 SpecBlockMean <- function(y = NULL,
                           L = NULL,
                           freq = seq(0, pi, length.out=19)[-1],
@@ -629,6 +629,7 @@ SpecCpOverlap <- function(y,
 
 #' Change point estimation for multivariate time series from frequency domain
 #'
+#' Estimate the change point locations using the Spectral method proposed in Zhang and Chan (2025). Also outputs the change point frequency and series information.
 #'
 #' @param y A `T` by `m` matrix for a multivariate time series of dimension `m` and length `T` .
 #' @param L The block size, a scalar `0<L<T`. Could be set subject to user preference. At least 50 for a good estimate of spectrum within block.
@@ -638,7 +639,7 @@ SpecCpOverlap <- function(y,
 #' @param sparsity (optional) The sparsity value. Default values are estimated from the data based on the data using one-by-one approach, so users do not need to specify unless they want to override the defaults.
 #' @param refine (optional, default `TRUE`) Logical indicating whether a refinement step will be indicated by scanning the localized blocks around the change point detected for multivariate time series
 #' @param do.parallel (optional, default 0) Number of copies of R running in parallel
-#' @param initial the initialization method, can be either aggregation or unfolding.
+#' @param initial the initialization method, can be either aggregation or unfolding, but aggregation is recommended since it is faster and more stable.
 #' @param mean.output (optional, default `FALSE`) Logical indicating whether the piecewise mean spectral will be output
 #' @param tau (optional) The threshold. Default values are estimated from the data, so users do not need to specify unless they want to override the defaults.
 #' @param M (optional) The number of random intervals in the wild binary segmentation.
@@ -655,7 +656,29 @@ SpecCpOverlap <- function(y,
 #'  \item{sparsity}{The specified or data-driven sparsity.}
 #'  \item{mean}{The piecewise mean of the spectral estimate (or coherency subject to `coherency` argument setting), a 4-dimensional order of `m` by `m` by `length(freq)` by `k+1`. Could be scaled subject to argument setting.}
 #' }
-#' @author Xinyu Zhang xinyu-zhang@uiowa.edu
+#' @examples
+#' \dontrun{
+#' # Data generation and change point detection
+#' set.seed(1)
+#' y <-DGP_mcp(TT = 6000, m = 80,
+#' sparsity = 8, q = 4, type = "vma")
+#' res <- SpecCp(y = y, L = 75)
+#'
+#' # Results
+#' res$cp # cp location
+#' res$cpfs$`1`$cpfreq # cp frequency
+#' mat <- res$cpfs$`1`$pro.allfreq
+#' CpFreq <- rep(0, nrow(mat))
+#' CpFreq[res$cpfs$`1`$cpfreq] <- 1
+#' annotation_row <- data.frame(CpFreq = CpFreq)
+#' rownames(annotation_row) <- rownames(mat)
+#' library(pheatmap)
+#' pheatmap(mat, annotation_row = annotation_row,
+#' main = "Projection", cluster_rows = FALSE,
+#' cluster_cols = FALSE,) # cp frequency-series
+#' }
+#' @references Zhang and Chan. (2025). Spectral change point estimation for high dimensional time series by sparse tensor decomposition.
+#' @author Xinyu Zhang
 #' @export
 SpecCp <- function(y,
                    L,
@@ -692,7 +715,7 @@ SpecCp <- function(y,
       return(NULL)
     }
   } else if (m > 1) {
-    if(message) print("Sparsity Estimation: started...")
+    if(message) print("Sparsity estimation: started...")
     res.one <- list(NULL)
     for (j in 1:m) {
       res <- SpecCp(

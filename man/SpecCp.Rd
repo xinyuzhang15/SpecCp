@@ -42,7 +42,7 @@ SpecCp(
 
 \item{do.parallel}{(optional, default 0) Number of copies of R running in parallel}
 
-\item{initial}{the initialization method, can be either aggregation or unfolding.}
+\item{initial}{the initialization method, can be either aggregation or unfolding, but aggregation is recommended since it is faster and more stable.}
 
 \item{mean.output}{(optional, default \code{FALSE}) Logical indicating whether the piecewise mean spectral will be output}
 
@@ -72,8 +72,33 @@ A list with the following elements
 }
 }
 \description{
-Change point estimation for multivariate time series from frequency domain
+Estimate the change point locations using the Spectral method proposed in Zhang and Chan (2025). Also outputs the change point frequency and series information.
+}
+\examples{
+\dontrun{
+# Data generation and change point detection
+set.seed(1)
+y <-DGP_mcp(TT = 6000, m = 80,
+sparsity = 8, q = 4, type = "vma")
+res <- SpecCp(y = y, L = 75)
+
+# Results
+res$cp # cp location
+res$cpfs$`1`$cpfreq # cp frequency
+mat <- res$cpfs$`1`$pro.allfreq
+CpFreq <- rep(0, nrow(mat))
+CpFreq[res$cpfs$`1`$cpfreq] <- 1
+annotation_row <- data.frame(CpFreq = CpFreq)
+rownames(annotation_row) <- rownames(mat)
+library(pheatmap)
+pheatmap(mat, annotation_row = annotation_row,
+main = "Projection", cluster_rows = FALSE,
+cluster_cols = FALSE,) # cp frequency-series
+}
+}
+\references{
+Zhang and Chan. (2025). Spectral change point estimation for high dimensional time series by sparse tensor decomposition.
 }
 \author{
-Xinyu Zhang xinyu-zhang@uiowa.edu
+Xinyu Zhang
 }

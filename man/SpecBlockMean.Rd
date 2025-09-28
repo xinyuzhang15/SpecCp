@@ -44,6 +44,4 @@ Returns the piecesewise block mean of spectral estimate, which is a four-dimensi
 \description{
 This function is used to show the piecewise mean after estiamting the change points.
 }
-\author{
-Xinyu Zhang xinyu-zhang@uiowa.edu
-}
+\keyword{internal}
